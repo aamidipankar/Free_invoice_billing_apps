@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DAS MOBILE SERVICE - Billing Invoice</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --primary-light: #ebf8ff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background-color: #eef2f5; color: #2c3e50; padding: 10px; }
+
+        /* Region Selection & Top Controls */
+        .region-bar { max-width: 850px; margin: 0 auto 12px auto; display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 8px; }
+        .region-bar label { font-weight: bold; font-size: 13px; color: #2d3748; }
+        .region-select { padding: 8px 12px; border-radius: 6px; border: 2px solid var(--primary-color); font-weight: bold; outline: none; cursor: pointer; font-size: 13px; width: auto; }
+
+        .search-container { max-width: 850px; margin: 0 auto 15px auto; }
+        .search-input { width: 100%; padding: 12px 15px; border: 2px solid var(--primary-color); border-radius: 8px; font-size: 14px; outline: none; background: #fff; }
+
+        .action-bar { max-width: 850px; margin: 0 auto 20px auto; display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); flex-wrap: wrap; gap: 12px; }
+        .action-bar h3 { color: var(--primary-color); font-size: 18px; width: 100%; text-align: center; }
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; width: 100%; justify-content: center; }
+        .btn { padding: 10px 14px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 1 1 calc(50% - 10px); min-width: 130px; text-align: center; }
+        
+        .btn-print { background-color: var(--primary-color); color: #fff; }
+        .btn-whatsapp { background-color: #25D366; color: #fff; }
+        .btn-pdf { background-color: #4a5568; color: #fff; }
+        .btn-clear { background-color: #e53e3e; color: #fff; }
+        .btn-edit { background-color: #d69e2e; color: #fff; }
+
+        /* Customization Modal / Form Inside App */
+        .config-panel { max-width: 850px; margin: 0 auto 20px auto; background: #fff; padding: 15px; border-radius: 10px; border: 2px dashed #d69e2e; display: none; }
+        .config-panel h4 { margin-bottom: 12px; color: #d69e2e; font-size: 15px; }
+        .config-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .config-grid input, .config-grid textarea { width: 100%; padding: 8px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px; }
+
+        /* Main Invoice Box */
+        .invoice-box { max-width: 850px; margin: 0 auto; background: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); border: 1px solid #cbd5e0; overflow-x: auto; }
+
+        /* Header Section */
+        .invoice-header-table { width: 100%; margin-bottom: 20px; border-collapse: collapse; }
+        .invoice-header-table td { vertical-align: top; display: block; width: 100%; }
+        
+        .brand-logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .logo-wrapper { width: 65px; height: 65px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--primary-color); border: 3px solid var(--primary-color); flex-shrink: 0; }
+        .shop-logo { width: 100%; height: 100%; object-fit: cover; }
+        
+        .shop-details h1 { font-size: 20px; color: var(--primary-color); font-weight: 800; letter-spacing: 0.5px; }
+        .shop-details p { font-size: 12px; color: #4a5568; margin-top: 2px; font-weight: 500; }
+
+        .invoice-title-area { text-align: left; }
+        .invoice-title-area h2 { font-size: 26px; color: #1a202c; letter-spacing: 1px; font-weight: 900; }
+        .invoice-badge { display: inline-block; background: var(--primary-light); color: var(--primary-color); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-top: 3px; border: 1px solid #bee3f8; }
+
+        /* Meta Info Grid */
+        .meta-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; margin-bottom: 20px; background: #f7fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .meta-table tr { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+        .meta-table tr:last-child { margin-bottom: 0; }
+        .meta-table td { width: 100%; display: block; }
+        .meta-field { display: flex; flex-direction: column; gap: 4px; }
+        .meta-field label { font-size: 11px; font-weight: 700; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
+        .meta-field input, .meta-field select { padding: 8px 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px; outline: none; background: #fff; font-weight: 600; color: #2d3748; width: 100%; }
+
+        /* Responsive Table Wrapper */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 15px; }
+        .items-table { width: 100%; min-width: 500px; border-collapse: collapse; }
+        .items-table th { background-color: var(--primary-color); color: #ffffff; padding: 10px; font-size: 12px; font-weight: 700; text-transform: uppercase; border: 1px solid var(--primary-color); }
+        .items-table td { padding: 6px 8px; border: 1px solid #cbd5e0; background: #fff; }
+        .items-table input { width: 100%; padding: 6px; border: 1px solid transparent; border-radius: 4px; font-size: 13px; outline: none; font-weight: 500; }
+        .items-table input:focus { border-color: var(--primary-color); background: #f7fafc; }
+
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+
+        .btn-add-item { background-color: #edf2f7; color: #2b6cb0; border: 2px dashed #cbd5e0; padding: 10px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; margin-bottom: 20px; }
+
+        /* Calculation Summary Table Design */
+        .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+        .summary-table td { vertical-align: top; display: block; width: 100%; }
+        
+        .terms-box { width: 100%; padding-right: 0; margin-bottom: 20px; }
+        .terms-box h4 { font-size: 12px; color: #2d3748; margin-bottom: 6px; text-transform: uppercase; }
+        .terms-box ol { padding-left: 15px; font-size: 11px; color: #718096; line-height: 1.5; }
+
+        .calc-table-wrapper { width: 100%; }
+        .calc-table { width: 100%; border-collapse: collapse; border: 1px solid #cbd5e0; border-radius: 6px; overflow: hidden; }
+        .calc-table td { padding: 8px 12px; font-size: 12px; font-weight: 600; color: #2d3748; border-bottom: 1px solid #e2e8f0; }
+        .calc-table tr:nth-child(even) { background-color: #f7fafc; }
+        .calc-table select { padding: 4px 6px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 12px; background: #fff; }
+        
+        .calc-table tr.grand-total-row { background-color: var(--primary-light); }
+        .calc-table tr.grand-total-row td { font-size: 15px; font-weight: 800; color: var(--primary-color); border-top: 2px solid var(--primary-color); border-bottom: none; }
+
+        /* Signature Area */
+        .signature-table { width: 100%; margin-top: 30px; border-collapse: collapse; }
+        .signature-table td { width: 50%; text-align: center; vertical-align: bottom; }
+        .sig-line { width: 120px; margin: 0 auto 6px auto; border-top: 2px dashed #a0aec0; }
+        .sig-text { font-size: 11px; font-weight: 700; color: #4a5568; }
+
+        /* Tablet & Larger Desktop Styles */
+        @media (min-width: 600px) {
+            body { padding: 20px; }
+            .invoice-box { padding: 35px; }
+            .action-bar h3 { width: auto; text-align: left; }
+            .btn-group { width: auto; justify-content: flex-end; }
+            .btn { flex: initial; min-width: auto; }
+            .config-grid { grid-template-columns: 1fr 1fr; }
+            
+            .invoice-header-table td { display: table-cell; width: 50%; }
+            .invoice-title-area { text-align: right; }
+
+            .meta-table tr { display: table-row; margin-bottom: 0; }
+            .meta-table td { display: table-cell; width: 50%; padding: 4px 8px; }
+
+            .summary-table td { display: table-cell; }
+            .terms-box { width: 50%; padding-right: 20px; margin-bottom: 0; }
+            .calc-table-wrapper { width: 50%; }
+            .sig-line { width: 180px; }
+            .sig-text { font-size: 13px; }
+        }
+
+        /* Print & PDF Export Optimized CSS */
+        @media print {
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { background: #fff !important; padding: 0 !important; }
+            .region-bar, .search-container, .action-bar, .config-panel, .btn-add-item, .delete-btn { display: none !important; }
+            .invoice-box { box-shadow: none !important; border: 1px solid #cbd5e0 !important; padding: 25px !important; max-width: 100% !important; margin: 0 !important; }
+            .invoice-header-table td { display: table-cell !important; width: 50% !important; }
+            .invoice-title-area { text-align: right !important; }
+            .meta-table tr { display: table-row !important; }
+            .meta-table td { display: table-cell !important; width: 50% !important; padding: 4px 6px !important; }
+            .items-table { min-width: 100% !important; }
+            .summary-table td { display: table-cell !important; }
+            .terms-box { width: 50% !important; padding-right: 20px !important; }
+            .calc-table-wrapper { width: 50% !important; }
+            .meta-field input, .meta-field select, .items-table input, .calc-table select { border: 1px solid #cbd5e0 !important; background: #fff !important; }
+            .items-table th { background-color: var(--primary-color) !important; color: #ffffff !important; }
+            .calc-table tr.grand-total-row { background-color: var(--primary-light) !important; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Region Selection -->
+    <div class="region-bar">
+        <label for="countryVersion">🌐 Country / Currency Mode:</label>
+        <select id="countryVersion" class="region-select" onchange="changeCountryVersion()">
+            <option value="IN">🇮🇳 India Version (INR ₹ / GST)</option>
+            <option value="BD">🇧🇩 Bangladesh Version (BDT ৳ / VAT)</option>
+        </select>
+    </div>
+
+    <!-- Search Input -->
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search Customer, Invoice #, Mobile..." onkeyup="filterInvoice()">
+    </div>
+
+    <!-- Top Action Toolbar -->
+    <div class="action-bar">
+        <h3 id="appTitle">DAS MOBILE SERVICE</h3>
+        <div class="btn-group">
+            <button class="btn btn-edit" onclick="toggleConfig()">⚙️ Edit</button>
+            <button class="btn btn-clear" onclick="resetForm()">New</button>
+            <button class="btn btn-pdf" onclick="downloadPDF()">📄 PDF</button>
+            <button class="btn btn-whatsapp" onclick="sendWhatsApp()">💬 WhatsApp</button>
+            <button class="btn btn-print" onclick="window.print()">🖨️ Print</button>
+        </div>
+    </div>
+
+    <!-- Customization Config Panel -->
+    <div class="config-panel" id="configPanel">
+        <h4>⚙️ App Customization Panel</h4>
+        <div class="config-grid">
+            <div>
+                <label style="font-size: 11px; font-weight: bold;">Shop Name:</label>
+                <input type="text" id="cfgShopName" value="DAS MOBILE SERVICE">
+            </div>
+            <div>
+                <label style="font-size: 11px; font-weight: bold;">Upload Logo:</label>
+                <input type="file" id="cfgLogoFile" accept="image/*" onchange="handleLogoUpload(this)">
+            </div>
+            <div>
+                <label style="font-size: 11px; font-weight: bold;">Address:</label>
+                <input type="text" id="cfgAddress" value="📍 Nepalganj Hat, Harirchak, West Bengal">
+            </div>
+            <div>
+                <label style="font-size: 11px; font-weight: bold;">Phone Numbers:</label>
+                <input type="text" id="cfgPhones" value="📞 Phone: +91 7003194308 / +91 9874862292">
+            </div>
+            <div>
+                <label style="font-size: 11px; font-weight: bold;">Theme Color:</label>
+                <input type="color" id="cfgThemeColor" value="#0056b3" style="height: 35px; cursor: pointer;">
+            </div>
+            <div>
+                <label style="font-size: 11px; font-weight: bold;">Invoice Prefix:</label>
+                <input type="text" id="cfgPrefix" value="#DMS-">
+            </div>
+            <div style="grid-column: 1 / -1;">
+                <label style="font-size: 11px; font-weight: bold;">Terms & Conditions (Comma Separated):</label>
+                <textarea id="cfgTerms" rows="2">ফিজিক্যাল ড্যামেজ বা ওয়াটার ড্যামেজের ক্ষেত্রে কোনো ওয়ারেন্টি প্রযোজ্য নয়।,ওয়ারেন্টি সেবার জন্য এই মূল ইনভয়েস বিলটি উপস্থাপন করা বাধ্যতামূলক।</textarea>
+            </div>
+        </div>
+        <button class="btn btn-print" style="margin-top: 12px; width:100%;" onclick="saveConfig()">Save All Changes</button>
+    </div>
+
+    <!-- Main Printable Invoice Area -->
+    <div class="invoice-box" id="invoiceArea">
+        
+        <!-- Header Section -->
+        <table class="invoice-header-table">
+            <tr>
+                <td>
+                    <div class="brand-logo-area">
+                        <div class="logo-wrapper">
+                            <img src="1000063125.png" id="displayLogo" alt="DMS" class="shop-logo" onerror="this.onerror=null; this.parentElement.innerHTML='<b style=\'color:#fff;font-size:18px;\'>DMS</b>';">
+                        </div>
+                        <div class="shop-details">
+                            <h1 id="displayShopName">DAS MOBILE SERVICE</h1>
+                            <p id="displayAddress">📍 Nepalganj Hat, Harirchak, West Bengal</p>
+                            <p id="displayPhones">📞 Phone: +91 7003194308 / +91 9874862292</p>
+                        </div>
+                    </div>
+                </td>
+                <td class="invoice-title-area">
+                    <h2>INVOICE</h2>
+                    <span class="invoice-badge">CASH MEMO / SERVICE BILL</span>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Customer & Invoice Meta Table -->
+        <table class="meta-table">
+            <tr>
+                <td>
+                    <div class="meta-field">
+                        <label>Customer Name</label>
+                        <input type="text" id="custName" class="searchable" placeholder="Enter name...">
+                    </div>
+                </td>
+                <td>
+                    <div class="meta-field">
+                        <label>Invoice Number</label>
+                        <input type="text" id="invoiceNum" class="searchable" value="#DMS-1001">
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="meta-field">
+                        <label>Phone Number</label>
+                        <input type="tel" id="custPhone" class="searchable" placeholder="Enter phone...">
+                    </div>
+                </td>
+                <td>
+                    <div class="meta-field">
+                        <label>Date & Time</label>
+                        <input type="text" id="invoiceDate" readonly>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="meta-field">
+                        <label>Device / Model</label>
+                        <input type="text" id="deviceModel" class="searchable" placeholder="e.g. Realme 11 Pro">
+                    </div>
+                </td>
+                <td>
+                    <div class="meta-field">
+                        <label>Payment Mode</label>
+                        <select id="paymentType">
+                            <option value="Cash">Cash</option>
+                            <option value="UPI / Online Payment">UPI / Mobile Banking</option>
+                            <option value="Card Payment">Card Payment</option>
+                            <option value="Due / Credit">Due / Credit</option>
+                        </select>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Main Particulars Items Table -->
+        <div class="table-responsive">
+            <table class="items-table" id="itemsTable">
+                <thead>
+                    <tr>
+                        <th style="width: 8%;" class="text-center">Sl.</th>
+                        <th style="width: 50%;">Description (Item / Service)</th>
+                        <th style="width: 15%;" class="text-center">Qty</th>
+                        <th style="width: 22%;" class="text-right" id="thAmount">Amount (₹)</th>
+                        <th style="width: 5%;" class="delete-btn"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-center">1</td>
+                        <td><input type="text" placeholder="Enter repair or spare part..." class="item-desc searchable"></td>
+                        <td><input type="number" value="1" class="item-qty text-center" oninput="calculateTotal()"></td>
+                        <td><input type="number" placeholder="0.00" class="item-price text-right" oninput="calculateTotal()"></td>
+                        <td class="delete-btn text-center"><button style="color:#e53e3e; cursor:pointer; border:none; background:none; font-weight:bold; font-size:16px;" onclick="deleteRow(this)">✕</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <button class="btn-add-item" onclick="addRow()">+ Add New Line Item</button>
+
+        <!-- Terms & Calculations Table -->
+        <table class="summary-table">
+            <tr>
+                <td class="terms-box">
+                    <h4>Terms & Conditions</h4>
+                    <ol id="displayTerms">
+                        <li>ফিজিক্যাল ড্যামেজ বা ওয়াটার ড্যামেজের ক্ষেত্রে কোনো ওয়ারেন্টি প্রযোজ্য নয়।</li>
+                        <li>ওয়ারেন্টি সেবার জন্য এই মূল ইনভয়েস বিলটি উপস্থাপন করা বাধ্যতামূলক।</li>
+                    </ol>
+                </td>
+                <td class="calc-table-wrapper">
+                    <table class="calc-table">
+                        <tr>
+                            <td>Sub Total:</td>
+                            <td class="text-right" id="subTotal">₹ 0.00</td>
+                        </tr>
+                        <tr>
+                            <td>Discount (%):</td>
+                            <td class="text-right">
+                                <select id="discountSelect" onchange="calculateTotal()">
+                                    <option value="0">0%</option>
+                                    <option value="1">1%</option>
+                                    <option value="2">2%</option>
+                                    <option value="3">3%</option>
+                                    <option value="4">4%</option>
+                                    <option value="5">5%</option>
+                                    <option value="6">6%</option>
+                                    <option value="7">7%</option>
+                                    <option value="8">8%</option>
+                                    <option value="9">9%</option>
+                                    <option value="10">10%</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td id="taxLabel">GST Rate:</td>
+                            <td class="text-right">
+                                <select id="taxSelect" onchange="calculateTotal()">
+                                    <option value="0">0% (No Tax)</option>
+                                    <option value="5">5%</option>
+                                    <option value="12">12%</option>
+                                    <option value="15">15%</option>
+                                    <option value="18">18%</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td id="taxAmountLabel">GST Amount:</td>
+                            <td class="text-right" id="taxAmount">₹ 0.00</td>
+                        </tr>
+                        <tr class="grand-total-row">
+                            <td>Grand Total:</td>
+                            <td class="text-right" id="grandTotal">₹ 0.00</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Signatures -->
+        <table class="signature-table">
+            <tr>
+                <td>
+                    <div class="sig-line"></div>
+                    <div class="sig-text">Customer Signature</div>
+                </td>
+                <td>
+                    <div class="sig-line"></div>
+                    <div class="sig-text">Authorised Signatory<br><small style="font-weight:normal; color:#718096;" id="sigShopName">DAS MOBILE SERVICE</small></div>
+                </td>
+            </tr>
+        </table>
+
+    </div>
+
+    <script>
+        let currencySymbol = '₹';
+        let defaultCountryCode = '91';
+        let uploadedLogoBase64 = '';
+
+        function setLiveDateTime() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-GB');
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            document.getElementById('invoiceDate').value = `${dateStr}, ${timeStr}`;
+        }
+
+        window.onload = function() {
+            setLiveDateTime();
+            loadSavedConfig();
+        };
+
+        function changeCountryVersion() {
+            const version = document.getElementById('countryVersion').value;
+            if (version === 'BD') {
+                currencySymbol = '৳';
+                defaultCountryCode = '880';
+                document.getElementById('thAmount').innerText = 'Amount (৳)';
+                document.getElementById('taxLabel').innerText = 'VAT Rate:';
+                document.getElementById('taxAmountLabel').innerText = 'VAT Amount:';
+            } else {
+                currencySymbol = '₹';
+                defaultCountryCode = '91';
+                document.getElementById('thAmount').innerText = 'Amount (₹)';
+                document.getElementById('taxLabel').innerText = 'GST Rate:';
+                document.getElementById('taxAmountLabel').innerText = 'GST Amount:';
+            }
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            let subTotal = 0;
+            const rows = document.querySelectorAll('#itemsTable tbody tr');
+            rows.forEach(row => {
+                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                subTotal += qty * price;
+            });
+
+            const discountPercent = parseFloat(document.getElementById('discountSelect').value) || 0;
+            const discountAmount = (subTotal * discountPercent) / 100;
+            const subTotalAfterDiscount = subTotal - discountAmount;
+
+            const taxPercent = parseFloat(document.getElementById('taxSelect').value) || 0;
+            const taxAmount = (subTotalAfterDiscount * taxPercent) / 100;
+
+            const grandTotal = subTotalAfterDiscount + taxAmount;
+
+            document.getElementById('subTotal').innerText = currencySymbol + ' ' + subTotal.toFixed(2);
+            document.getElementById('taxAmount').innerText = currencySymbol + ' ' + taxAmount.toFixed(2);
+            document.getElementById('grandTotal').innerText = currencySymbol + ' ' + grandTotal.toFixed(2);
+        }
+
+        function addRow() {
+            const table = document.getElementById('itemsTable').getElementsByTagName('tbody')[0];
+            const rowCount = table.rows.length + 1;
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td class="text-center">${rowCount}</td>
+                <td><input type="text" placeholder="Enter repair or spare part..." class="item-desc searchable"></td>
+                <td><input type="number" value="1" class="item-qty text-center" oninput="calculateTotal()"></td>
+                <td><input type="number" placeholder="0.00" class="item-price text-right" oninput="calculateTotal()"></td>
+                <td class="delete-btn text-center"><button style="color:#e53e3e; cursor:pointer; border:none; background:none; font-weight:bold; font-size:16px;" onclick="deleteRow(this)">✕</button></td>
+            `;
+            calculateTotal();
+        }
+
+        function deleteRow(btn) {
+            const row = btn.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+            calculateTotal();
+        }
+
+        function resetForm() {
+            document.getElementById('custName').value = '';
+            document.getElementById('custPhone').value = '';
+            document.getElementById('deviceModel').value = '';
+            document.getElementById('discountSelect').value = '0';
+            document.getElementById('taxSelect').value = '0';
+            document.getElementById('paymentType').selectedIndex = 0;
+            document.getElementById('searchInput').value = '';
+            document.getElementById('invoiceArea').style.display = 'block';
+
+            setLiveDateTime();
+
+            const tbody = document.getElementById('itemsTable').getElementsByTagName('tbody')[0];
+            tbody.innerHTML = `
+                <tr>
+                    <td class="text-center">1</td>
+                    <td><input type="text" placeholder="Enter repair or spare part..." class="item-desc searchable"></td>
+                    <td><input type="number" value="1" class="item-qty text-center" oninput="calculateTotal()"></td>
+                    <td><input type="number" placeholder="0.00" class="item-price text-right" oninput="calculateTotal()"></td>
+                    <td class="delete-btn text-center"><button style="color:#e53e3e; cursor:pointer; border:none; background:none; font-weight:bold; font-size:16px;" onclick="deleteRow(this)">✕</button></td>
+                </tr>
+            `;
+            calculateTotal();
+        }
+
+        function filterInvoice() {
+            const filter = document.getElementById('searchInput').value.toLowerCase();
+            const searchableFields = document.querySelectorAll('.searchable');
+            let matchFound = false;
+
+            if (filter.trim() === '') {
+                document.getElementById('invoiceArea').style.display = 'block';
+                return;
+            }
+
+            searchableFields.forEach(field => {
+                if (field.value.toLowerCase().includes(filter)) {
+                    matchFound = true;
+                }
+            });
+
+            document.getElementById('invoiceArea').style.display = matchFound ? 'block' : 'none';
+        }
+
+        function toggleConfig() {
+            const panel = document.getElementById('configPanel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function handleLogoUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedLogoBase64 = e.target.result;
+                    document.getElementById('displayLogo').src = uploadedLogoBase64;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveConfig() {
+            const shopName = document.getElementById('cfgShopName').value;
+            const address = document.getElementById('cfgAddress').value;
+            const phones = document.getElementById('cfgPhones').value;
+            const themeColor = document.getElementById('cfgThemeColor').value;
+            const prefix = document.getElementById('cfgPrefix').value;
+            const termsRaw = document.getElementById('cfgTerms').value;
+
+            document.documentElement.style.setProperty('--primary-color', themeColor);
+
+            document.getElementById('appTitle').innerText = shopName;
+            document.getElementById('displayShopName').innerText = shopName;
+            document.getElementById('sigShopName').innerText = shopName;
+            document.getElementById('displayAddress').innerText = address;
+            document.getElementById('displayPhones').innerText = phones;
+            document.getElementById('invoiceNum').value = prefix + "1001";
+
+            const termsArray = termsRaw.split(',');
+            const termsOl = document.getElementById('displayTerms');
+            termsOl.innerHTML = '';
+            termsArray.forEach(term => {
+                if(term.trim()) {
+                    const li = document.createElement('li');
+                    li.innerText = term.trim();
+                    termsOl.appendChild(li);
+                }
+            });
+
+            const appConfig = {
+                shopName, address, phones, themeColor, prefix, termsRaw, logoBase64: uploadedLogoBase64
+            };
+            localStorage.setItem('dms_app_config', JSON.stringify(appConfig));
+
+            toggleConfig();
+            alert('সমস্ত পরিবর্তন সফলভাবে সেভ হয়েছে!');
+        }
+
+        function loadSavedConfig() {
+            const saved = localStorage.getItem('dms_app_config');
+            if (saved) {
+                const cfg = JSON.parse(saved);
+                document.getElementById('cfgShopName').value = cfg.shopName || 'DAS MOBILE SERVICE';
+                document.getElementById('cfgAddress').value = cfg.address || '';
+                document.getElementById('cfgPhones').value = cfg.phones || '';
+                document.getElementById('cfgThemeColor').value = cfg.themeColor || '#0056b3';
+                document.getElementById('cfgPrefix').value = cfg.prefix || '#DMS-';
+                document.getElementById('cfgTerms').value = cfg.termsRaw || '';
+
+                if (cfg.logoBase64) {
+                    uploadedLogoBase64 = cfg.logoBase64;
+                    document.getElementById('displayLogo').src = cfg.logoBase64;
+                }
+
+                document.documentElement.style.setProperty('--primary-color', cfg.themeColor || '#0056b3');
+                document.getElementById('appTitle').innerText = cfg.shopName;
+                document.getElementById('displayShopName').innerText = cfg.shopName;
+                document.getElementById('sigShopName').innerText = cfg.shopName;
+                document.getElementById('displayAddress').innerText = cfg.address;
+                document.getElementById('displayPhones').innerText = cfg.phones;
+                document.getElementById('invoiceNum').value = (cfg.prefix || '#DMS-') + "1001";
+
+                if (cfg.termsRaw) {
+                    const termsArray = cfg.termsRaw.split(',');
+                    const termsOl = document.getElementById('displayTerms');
+                    termsOl.innerHTML = '';
+                    termsArray.forEach(term => {
+                        if(term.trim()) {
+                            const li = document.createElement('li');
+                            li.innerText = term.trim();
+                            termsOl.appendChild(li);
+                        }
+                    });
+                }
+            }
+        }
+
+        function downloadPDF() {
+            const element = document.getElementById('invoiceArea');
+            const invoiceNum = document.getElementById('invoiceNum').value || 'Invoice';
+            const custName = document.getElementById('custName').value || 'Customer';
+
+            const opt = {
+                margin: 5,
+                filename: `${invoiceNum}_${custName}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true, logging: false },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save();
+        }
+
+        function sendWhatsApp() {
+            let phone = document.getElementById('custPhone').value.trim();
+            const name = document.getElementById('custName').value.trim() || 'Customer';
+            const invoiceNo = document.getElementById('invoiceNum').value;
+            const total = document.getElementById('grandTotal').innerText;
+            const device = document.getElementById('deviceModel').value || 'N/A';
+            const shopName = document.getElementById('displayShopName').innerText;
+
+            if (!phone) {
+                alert('দয়া করে কাস্টমারের ফোন নম্বর লিখুন!');
+                return;
+            }
+
+            phone = phone.replace(/\D/g, '');
+            if (phone.length === 10 && defaultCountryCode === '91') phone = '91' + phone;
+            if (phone.length === 11 && defaultCountryCode === '880' && phone.startsWith('0')) phone = '880' + phone.substring(1);
+
+            downloadPDF();
+
+            const message = `হ্যালো ${name},\n\n` +
+                `*${shopName}*-এ আসার জন্য আপনাকে ধন্যবাদ।\n\n` +
+                `📋 *Invoice No:* ${invoiceNo}\n` +
+                `📱 *Device:* ${device}\n` +
+                `💰 *Total Amount:* ${total}\n\n` +
+                `আপনার ইনভয়েস PDF-টি ডাউনলোড হয়েছে। এটি সেভ করে রাখুন।`;
+
+            const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+    </script>
+</body>
+</html>
