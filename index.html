@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DAS MOBILE SERVICE - Billing Invoice</title>
     
-    <!-- Google AdSense Verification Code -->
+    <!-- Google AdSense Verification Meta Tag -->
+    <meta name="google-adsense-account" content="ca-pub-6614656977523744">
+    
+    <!-- Google AdSense Script -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6614656977523744"
          crossorigin="anonymous"></script>
 
+    <title>DAS MOBILE SERVICE - Billing Invoice</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         :root {
@@ -19,7 +22,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
         body { background-color: #eef2f5; color: #2c3e50; padding: 10px; }
 
-        /* Region Selection & Top Controls */
         .region-bar { max-width: 850px; margin: 0 auto 12px auto; display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 8px; }
         .region-bar label { font-weight: bold; font-size: 13px; color: #2d3748; }
         .region-select { padding: 8px 12px; border-radius: 6px; border: 2px solid var(--primary-color); font-weight: bold; outline: none; cursor: pointer; font-size: 13px; width: auto; }
@@ -38,16 +40,13 @@
         .btn-clear { background-color: #e53e3e; color: #fff; }
         .btn-edit { background-color: #d69e2e; color: #fff; }
 
-        /* Customization Modal / Form Inside App */
         .config-panel { max-width: 850px; margin: 0 auto 20px auto; background: #fff; padding: 15px; border-radius: 10px; border: 2px dashed #d69e2e; display: none; }
         .config-panel h4 { margin-bottom: 12px; color: #d69e2e; font-size: 15px; }
         .config-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
         .config-grid input, .config-grid textarea { width: 100%; padding: 8px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px; }
 
-        /* Main Invoice Box */
         .invoice-box { max-width: 850px; margin: 0 auto; background: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); border: 1px solid #cbd5e0; overflow-x: auto; }
 
-        /* Header Section */
         .invoice-header-table { width: 100%; margin-bottom: 20px; border-collapse: collapse; }
         .invoice-header-table td { vertical-align: top; display: block; width: 100%; }
         
@@ -62,7 +61,6 @@
         .invoice-title-area h2 { font-size: 26px; color: #1a202c; letter-spacing: 1px; font-weight: 900; }
         .invoice-badge { display: inline-block; background: var(--primary-light); color: var(--primary-color); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-top: 3px; border: 1px solid #bee3f8; }
 
-        /* Meta Info Grid */
         .meta-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; margin-bottom: 20px; background: #f7fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
         .meta-table tr { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
         .meta-table tr:last-child { margin-bottom: 0; }
@@ -71,7 +69,6 @@
         .meta-field label { font-size: 11px; font-weight: 700; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
         .meta-field input, .meta-field select { padding: 8px 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px; outline: none; background: #fff; font-weight: 600; color: #2d3748; width: 100%; }
 
-        /* Responsive Table Wrapper */
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 15px; }
         .items-table { width: 100%; min-width: 500px; border-collapse: collapse; }
         .items-table th { background-color: var(--primary-color); color: #ffffff; padding: 10px; font-size: 12px; font-weight: 700; text-transform: uppercase; border: 1px solid var(--primary-color); }
@@ -84,7 +81,6 @@
 
         .btn-add-item { background-color: #edf2f7; color: #2b6cb0; border: 2px dashed #cbd5e0; padding: 10px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; margin-bottom: 20px; }
 
-        /* Calculation Summary Table Design */
         .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
         .summary-table td { vertical-align: top; display: block; width: 100%; }
         
@@ -101,13 +97,11 @@
         .calc-table tr.grand-total-row { background-color: var(--primary-light); }
         .calc-table tr.grand-total-row td { font-size: 15px; font-weight: 800; color: var(--primary-color); border-top: 2px solid var(--primary-color); border-bottom: none; }
 
-        /* Signature Area */
         .signature-table { width: 100%; margin-top: 30px; border-collapse: collapse; }
         .signature-table td { width: 50%; text-align: center; vertical-align: bottom; }
         .sig-line { width: 120px; margin: 0 auto 6px auto; border-top: 2px dashed #a0aec0; }
         .sig-text { font-size: 11px; font-weight: 700; color: #4a5568; }
 
-        /* Tablet & Larger Desktop Styles */
         @media (min-width: 600px) {
             body { padding: 20px; }
             .invoice-box { padding: 35px; }
@@ -129,7 +123,6 @@
             .sig-text { font-size: 13px; }
         }
 
-        /* Print & PDF Export Optimized CSS */
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
             body { background: #fff !important; padding: 0 !important; }
@@ -151,7 +144,6 @@
 </head>
 <body>
 
-    <!-- Region Selection -->
     <div class="region-bar">
         <label for="countryVersion">🌐 Country / Currency Mode:</label>
         <select id="countryVersion" class="region-select" onchange="changeCountryVersion()">
@@ -160,12 +152,10 @@
         </select>
     </div>
 
-    <!-- Search Input -->
     <div class="search-container">
         <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search Customer, Invoice #, Mobile..." onkeyup="filterInvoice()">
     </div>
 
-    <!-- Top Action Toolbar -->
     <div class="action-bar">
         <h3 id="appTitle">DAS MOBILE SERVICE</h3>
         <div class="btn-group">
@@ -177,7 +167,6 @@
         </div>
     </div>
 
-    <!-- Customization Config Panel -->
     <div class="config-panel" id="configPanel">
         <h4>⚙️ App Customization Panel</h4>
         <div class="config-grid">
@@ -213,10 +202,8 @@
         <button class="btn btn-print" style="margin-top: 12px; width:100%;" onclick="saveConfig()">Save All Changes</button>
     </div>
 
-    <!-- Main Printable Invoice Area -->
     <div class="invoice-box" id="invoiceArea">
         
-        <!-- Header Section -->
         <table class="invoice-header-table">
             <tr>
                 <td>
@@ -238,7 +225,6 @@
             </tr>
         </table>
 
-        <!-- Customer & Invoice Meta Table -->
         <table class="meta-table">
             <tr>
                 <td>
@@ -289,7 +275,6 @@
             </tr>
         </table>
 
-        <!-- Main Particulars Items Table -->
         <div class="table-responsive">
             <table class="items-table" id="itemsTable">
                 <thead>
@@ -315,7 +300,6 @@
 
         <button class="btn-add-item" onclick="addRow()">+ Add New Line Item</button>
 
-        <!-- Terms & Calculations Table -->
         <table class="summary-table">
             <tr>
                 <td class="terms-box">
@@ -374,7 +358,6 @@
             </tr>
         </table>
 
-        <!-- Signatures -->
         <table class="signature-table">
             <tr>
                 <td>
@@ -517,18 +500,13 @@
             panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
         }
 
-        /* 1. Base64 Upload Fix for any User */
         function handleLogoUpload(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     uploadedLogoBase64 = e.target.result;
-                    
-                    // Display image
                     const logoWrapper = document.querySelector('.logo-wrapper');
                     logoWrapper.innerHTML = `<img src="${uploadedLogoBase64}" id="displayLogo" alt="Shop Logo" class="shop-logo">`;
-                    
-                    // Save to User's Browser
                     localStorage.setItem('dms_app_custom_logo', uploadedLogoBase64);
                 };
                 reader.readAsDataURL(input.files[0]);
@@ -573,7 +551,6 @@
         }
 
         function loadSavedConfig() {
-            // Load saved logo
             const savedLogo = localStorage.getItem('dms_app_custom_logo');
             if (savedLogo) {
                 uploadedLogoBase64 = savedLogo;
@@ -614,7 +591,6 @@
             }
         }
 
-        /* 2. PDF Export Fix for CORS and Custom Base64 Images */
         function downloadPDF() {
             const element = document.getElementById('invoiceArea');
             const invoiceNum = document.getElementById('invoiceNum').value || 'Invoice';
