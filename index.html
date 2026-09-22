@@ -2,388 +2,664 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DAS MOBILE SERVICE - Billing & Invoice Generator</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- html2pdf.js for PDF Export -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DAS MOBILE SERVICE - Billing Invoice</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        @media print {
-            .no-print { display: none !important; }
+        :root {
+            --primary-color: #0056b3;
+            --primary-light: #ebf8ff;
         }
-        .ad-box {
-            background: #f8fafc;
-            border: 1px dashed #cbd5e1;
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background-color: #eef2f5; color: #2c3e50; padding: 10px; }
+
+        /* Region Selection & Top Controls */
+        .region-bar { max-width: 850px; margin: 0 auto 12px auto; display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 12px 15px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); flex-wrap: wrap; gap: 8px; }
+        .region-bar label { font-weight: bold; font-size: 13px; color: #2d3748; }
+        .region-select { padding: 8px 12px; border-radius: 6px; border: 2px solid var(--primary-color); font-weight: bold; outline: none; cursor: pointer; font-size: 13px; width: auto; }
+
+        .search-container { max-width: 850px; margin: 0 auto 15px auto; }
+        .search-input { width: 100%; padding: 12px 15px; border: 2px solid var(--primary-color); border-radius: 8px; font-size: 14px; outline: none; background: #fff; }
+
+        .action-bar { max-width: 850px; margin: 0 auto 20px auto; display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); flex-wrap: wrap; gap: 12px; }
+        .action-bar h3 { color: var(--primary-color); font-size: 18px; width: 100%; text-align: center; }
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; width: 100%; justify-content: center; }
+        .btn { padding: 10px 14px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 1 1 calc(50% - 10px); min-width: 130px; text-align: center; }
+        
+        .btn-print { background-color: var(--primary-color); color: #fff; }
+        .btn-whatsapp { background-color: #25D366; color: #fff; }
+        .btn-pdf { background-color: #4a5568; color: #fff; }
+        .btn-clear { background-color: #e53e3e; color: #fff; }
+        .btn-edit { background-color: #d69e2e; color: #fff; }
+
+        /* Customization Modal / Form Inside App */
+        .config-panel { max-width: 850px; margin: 0 auto 20px auto; background: #fff; padding: 15px; border-radius: 10px; border: 2px dashed #d69e2e; display: none; }
+        .config-panel h4 { margin-bottom: 12px; color: #d69e2e; font-size: 15px; }
+        .config-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+        .config-grid input, .config-grid textarea { width: 100%; padding: 8px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px; }
+
+        /* Main Invoice Box */
+        .invoice-box { max-width: 850px; margin: 0 auto; background: #ffffff; padding: 20px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.06); border: 1px solid #cbd5e0; overflow-x: auto; }
+
+        /* Header Section */
+        .invoice-header-table { width: 100%; margin-bottom: 20px; border-collapse: collapse; }
+        .invoice-header-table td { vertical-align: top; display: block; width: 100%; }
+        
+        .brand-logo-area { display: flex; align-items: center; gap: 12px; margin-bottom: 15px; }
+        .logo-wrapper { width: 65px; height: 65px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--primary-color); border: 3px solid var(--primary-color); flex-shrink: 0; }
+        .shop-logo { width: 100%; height: 100%; object-fit: cover; }
+        
+        .shop-details h1 { font-size: 20px; color: var(--primary-color); font-weight: 800; letter-spacing: 0.5px; }
+        .shop-details p { font-size: 12px; color: #4a5568; margin-top: 2px; font-weight: 500; }
+
+        .invoice-title-area { text-align: left; }
+        .invoice-title-area h2 { font-size: 26px; color: #1a202c; letter-spacing: 1px; font-weight: 900; }
+        .invoice-badge { display: inline-block; background: var(--primary-light); color: var(--primary-color); padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; margin-top: 3px; border: 1px solid #bee3f8; }
+
+        /* Meta Info Grid */
+        .meta-table { width: 100%; border-collapse: separate; border-spacing: 0 10px; margin-bottom: 20px; background: #f7fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .meta-table tr { display: flex; flex-direction: column; gap: 10px; margin-bottom: 10px; }
+        .meta-table tr:last-child { margin-bottom: 0; }
+        .meta-table td { width: 100%; display: block; }
+        .meta-field { display: flex; flex-direction: column; gap: 4px; }
+        .meta-field label { font-size: 11px; font-weight: 700; color: #718096; text-transform: uppercase; letter-spacing: 0.5px; }
+        .meta-field input, .meta-field select { padding: 8px 10px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px; outline: none; background: #fff; font-weight: 600; color: #2d3748; width: 100%; }
+
+        /* Responsive Table Wrapper */
+        .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 15px; }
+        .items-table { width: 100%; min-width: 500px; border-collapse: collapse; }
+        .items-table th { background-color: var(--primary-color); color: #ffffff; padding: 10px; font-size: 12px; font-weight: 700; text-transform: uppercase; border: 1px solid var(--primary-color); }
+        .items-table td { padding: 6px 8px; border: 1px solid #cbd5e0; background: #fff; }
+        .items-table input { width: 100%; padding: 6px; border: 1px solid transparent; border-radius: 4px; font-size: 13px; outline: none; font-weight: 500; }
+        .items-table input:focus { border-color: var(--primary-color); background: #f7fafc; }
+
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+
+        .btn-add-item { background-color: #edf2f7; color: #2b6cb0; border: 2px dashed #cbd5e0; padding: 10px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; margin-bottom: 20px; }
+
+        /* Calculation Summary Table Design */
+        .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+        .summary-table td { vertical-align: top; display: block; width: 100%; }
+        
+        .terms-box { width: 100%; padding-right: 0; margin-bottom: 20px; }
+        .terms-box h4 { font-size: 12px; color: #2d3748; margin-bottom: 6px; text-transform: uppercase; }
+        .terms-box ol { padding-left: 15px; font-size: 11px; color: #718096; line-height: 1.5; }
+
+        .calc-table-wrapper { width: 100%; }
+        .calc-table { width: 100%; border-collapse: collapse; border: 1px solid #cbd5e0; border-radius: 6px; overflow: hidden; }
+        .calc-table td { padding: 8px 12px; font-size: 12px; font-weight: 600; color: #2d3748; border-bottom: 1px solid #e2e8f0; }
+        .calc-table tr:nth-child(even) { background-color: #f7fafc; }
+        .calc-table select { padding: 4px 6px; border: 1px solid #cbd5e0; border-radius: 4px; font-size: 12px; background: #fff; }
+        
+        .calc-table tr.grand-total-row { background-color: var(--primary-light); }
+        .calc-table tr.grand-total-row td { font-size: 15px; font-weight: 800; color: var(--primary-color); border-top: 2px solid var(--primary-color); border-bottom: none; }
+
+        /* Signature Area */
+        .signature-table { width: 100%; margin-top: 30px; border-collapse: collapse; }
+        .signature-table td { width: 50%; text-align: center; vertical-align: bottom; }
+        .sig-line { width: 120px; margin: 0 auto 6px auto; border-top: 2px dashed #a0aec0; }
+        .sig-text { font-size: 11px; font-weight: 700; color: #4a5568; }
+
+        /* Tablet & Larger Desktop Styles */
+        @media (min-width: 600px) {
+            body { padding: 20px; }
+            .invoice-box { padding: 35px; }
+            .action-bar h3 { width: auto; text-align: left; }
+            .btn-group { width: auto; justify-content: flex-end; }
+            .btn { flex: initial; min-width: auto; }
+            .config-grid { grid-template-columns: 1fr 1fr; }
+            
+            .invoice-header-table td { display: table-cell; width: 50%; }
+            .invoice-title-area { text-align: right; }
+
+            .meta-table tr { display: table-row; margin-bottom: 0; }
+            .meta-table td { display: table-cell; width: 50%; padding: 4px 8px; }
+
+            .summary-table td { display: table-cell; }
+            .terms-box { width: 50%; padding-right: 20px; margin-bottom: 0; }
+            .calc-table-wrapper { width: 50%; }
+            .sig-line { width: 180px; }
+            .sig-text { font-size: 13px; }
+        }
+
+        /* Print & PDF Export Optimized CSS */
+        @media print {
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body { background: #fff !important; padding: 0 !important; }
+            .region-bar, .search-container, .action-bar, .config-panel, .btn-add-item, .delete-btn { display: none !important; }
+            .invoice-box { box-shadow: none !important; border: 1px solid #cbd5e0 !important; padding: 25px !important; max-width: 100% !important; margin: 0 !important; }
+            .invoice-header-table td { display: table-cell !important; width: 50% !important; }
+            .invoice-title-area { text-align: right !important; }
+            .meta-table tr { display: table-row !important; }
+            .meta-table td { display: table-cell !important; width: 50% !important; padding: 4px 6px !important; }
+            .items-table { min-width: 100% !important; }
+            .summary-table td { display: table-cell !important; }
+            .terms-box { width: 50% !important; padding-right: 20px !important; }
+            .calc-table-wrapper { width: 50% !important; }
+            .meta-field input, .meta-field select, .items-table input, .calc-table select { border: 1px solid #cbd5e0 !important; background: #fff !important; }
+            .items-table th { background-color: var(--primary-color) !important; color: #ffffff !important; }
+            .calc-table tr.grand-total-row { background-color: var(--primary-light) !important; }
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
+<body>
 
-    <!-- Top Navigation / Header -->
-    <header class="bg-indigo-700 text-white p-4 shadow-lg no-print">
-        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-3">
-            <div class="flex items-center gap-3">
-                <i class="fa-solid fa-mobile-screen-button text-2xl"></i>
-                <h1 class="text-xl font-bold">DAS MOBILE SERVICE - Invoice App</h1>
+    <!-- Region Selection -->
+    <div class="region-bar">
+        <label for="countryVersion">🌐 Country / Currency Mode:</label>
+        <select id="countryVersion" class="region-select" onchange="changeCountryVersion()">
+            <option value="IN">🇮🇳 India Version (INR ₹ / GST)</option>
+            <option value="BD">🇧🇩 Bangladesh Version (BDT ৳ / VAT)</option>
+        </select>
+    </div>
+
+    <!-- Search Input -->
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search Customer, Invoice #, Mobile..." onkeyup="filterInvoice()">
+    </div>
+
+    <!-- Top Action Toolbar -->
+    <div class="action-bar">
+        <h3 id="appTitle">DAS MOBILE SERVICE</h3>
+        <div class="btn-group">
+            <button class="btn btn-edit" onclick="toggleConfig()">⚙️ Edit</button>
+            <button class="btn btn-clear" onclick="resetForm()">New</button>
+            <button class="btn btn-pdf" onclick="downloadPDF()">📄 PDF</button>
+            <button class="btn btn-whatsapp" onclick="sendWhatsApp()">💬 WhatsApp</button>
+            <button class="btn btn-print" onclick="window.print()">🖨️ Print</button>
+        </div>
+    </div>
+
+    <!-- Customization Config Panel -->
+    <div class="config-panel" id="configPanel">
+        <h4>⚙️ App Customization Panel</h4>
+        <div class="config-grid">
+            <div>
+                <label style="font-size: 11px; font-weight: bold;">Shop Name:</label>
+                <input type="text" id="cfgShopName" value="DAS MOBILE SERVICE">
             </div>
-            <div class="flex items-center gap-3">
-                <!-- Region Selector -->
-                <select id="regionSelect" class="bg-indigo-800 text-white px-3 py-1.5 rounded-lg border border-indigo-500 text-sm focus:outline-none">
-                    <option value="IN">🇮🇳 India (INR - ₹ / GST)</option>
-                    <option value="BD">🇧🇩 Bangladesh (BDT - ৳ / VAT)</option>
-                </select>
-                <!-- Live Date Time -->
-                <span id="liveDateTime" class="text-xs bg-indigo-900/60 px-3 py-1.5 rounded-lg font-mono"></span>
+            <div>
+                <label style="font-size: 11px; font-weight: bold;">Upload Logo:</label>
+                <input type="file" id="cfgLogoFile" accept="image/*" onchange="handleLogoUpload(this)">
+            </div>
+            <div>
+                <label style="font-size: 11px; font-weight: bold;">Address:</label>
+                <input type="text" id="cfgAddress" value="📍 Nepalganj Hat, Harirchak, West Bengal">
+            </div>
+            <div>
+                <label style="font-size: 11px; font-weight: bold;">Phone Numbers:</label>
+                <input type="text" id="cfgPhones" value="📞 Phone: +91 7003194308 / +91 9874862292">
+            </div>
+            <div>
+                <label style="font-size: 11px; font-weight: bold;">Theme Color:</label>
+                <input type="color" id="cfgThemeColor" value="#0056b3" style="height: 35px; cursor: pointer;">
+            </div>
+            <div>
+                <label style="font-size: 11px; font-weight: bold;">Invoice Prefix:</label>
+                <input type="text" id="cfgPrefix" value="#DMS-">
+            </div>
+            <div style="grid-column: 1 / -1;">
+                <label style="font-size: 11px; font-weight: bold;">Terms & Conditions (Comma Separated):</label>
+                <textarea id="cfgTerms" rows="2">ফিজিক্যাল ড্যামেজ বা ওয়াটার ড্যামেজের ক্ষেত্রে কোনো ওয়ারেন্টি প্রযোজ্য নয়।,ওয়ারেন্টি সেবার জন্য এই মূল ইনভয়েস বিলটি উপস্থাপন করা বাধ্যতামূলক।</textarea>
             </div>
         </div>
-    </header>
+        <button class="btn btn-print" style="margin-top: 12px; width:100%;" onclick="saveConfig()">Save All Changes</button>
+    </div>
 
-    <!-- Main Container -->
-    <main class="max-w-6xl mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-        <!-- Controls & Settings Panel (Left Column) -->
-        <section class="lg:col-span-5 space-y-6 no-print">
-            
-            <!-- Shop Configuration Card -->
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                <h2 class="text-base font-semibold mb-4 text-indigo-700 flex items-center gap-2">
-                    <i class="fa-solid fa-store"></i> দোকানের তথ্য কাস্টমাইজ করুন
-                </h2>
-                <div class="space-y-3 text-sm">
-                    <div>
-                        <label class="block text-slate-600 mb-1">দোকানের নাম:</label>
-                        <input type="text" id="shopName" value="DAS MOBILE SERVICE" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-slate-600 mb-1">ঠিকানা & ফোন নম্বর:</label>
-                        <textarea id="shopAddress" rows="2" class="w-full border rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 outline-none">Vill+P.O - Main Road, Pin - 700001
-Mob: +91 9876543210</textarea>
-                    </div>
-                    <div>
-                        <label class="block text-slate-600 mb-1">দোকানের আইকন / লোগো আপলোড:</label>
-                        <input type="file" id="logoInput" accept="image/*" class="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Customer & Invoice Info -->
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                <h2 class="text-base font-semibold mb-4 text-indigo-700 flex items-center gap-2">
-                    <i class="fa-solid fa-user-gear"></i> কাস্টমারের তথ্য
-                </h2>
-                <div class="space-y-3 text-sm">
-                    <div>
-                        <label class="block text-slate-600 mb-1">গ্রাহকের নাম:</label>
-                        <input type="text" id="custName" placeholder="Customer Name" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-slate-600 mb-1">মোবাইল নম্বর:</label>
-                        <input type="tel" id="custPhone" placeholder="Mobile Number" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <div>
-                        <label class="block text-slate-600 mb-1">ডিভাইস / মডেল:</label>
-                        <input type="text" id="custDevice" placeholder="e.g. Realme 11 Pro / Display Issue" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Add Service/Item Entry -->
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200">
-                <h2 class="text-base font-semibold mb-4 text-indigo-700 flex items-center gap-2">
-                    <i class="fa-solid fa-cart-plus"></i> আইটেম / সার্ভিস যোগ করুন
-                </h2>
-                <div class="space-y-3 text-sm">
-                    <input type="text" id="itemDesc" placeholder="কাজের বিবরণ (e.g. Display Replacement)" class="w-full border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
-                    <div class="grid grid-cols-2 gap-3">
-                        <input type="number" id="itemQty" value="1" min="1" placeholder="পরিমাণ" class="border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
-                        <input type="number" id="itemPrice" placeholder="মূল্য" class="border rounded-lg p-2 outline-none focus:ring-2 focus:ring-indigo-500">
-                    </div>
-                    <button id="addItemBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 rounded-lg transition-colors flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-plus"></i> আইটেম যুক্ত করুন
-                    </button>
-                </div>
-            </div>
-
-            <!-- Actions Bar -->
-            <div class="flex flex-col gap-3">
-                <button id="downloadPdfBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-file-pdf text-lg"></i> PDF ইনভয়েস ডাউনলোড করুন
-                </button>
-                <button id="whatsappShareBtn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
-                    <i class="fa-brands fa-whatsapp text-xl"></i> WhatsApp-এ শেয়ার করুন
-                </button>
-            </div>
-
-            <!-- Google AdSense Unit (Side Bar / Monetization) -->
-            <div class="ad-box p-4 rounded-xl text-center">
-                <span class="text-[10px] uppercase font-bold text-slate-400 block mb-2">Advertisement</span>
-                <!-- Google AdSense Code Banner Placeholder -->
-                <ins class="adsbygoogle"
-                     style="display:block"
-                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                     data-ad-slot="1234567890"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-            </div>
-
-        </section>
-
-        <!-- Live Invoice Preview (Right Column / Printable Area) -->
-        <section class="lg:col-span-7">
-            <div id="invoicePreview" class="bg-white p-6 sm:p-8 rounded-xl shadow-md border border-slate-200">
-                
-                <!-- Invoice Header -->
-                <div class="flex justify-between items-start border-b pb-4 mb-4 gap-4">
-                    <div class="flex items-center gap-3">
-                        <!-- Dynamic Shop Logo/Icon -->
-                        <img id="displayLogo" src="" alt="Logo" class="w-14 h-14 object-contain rounded-lg border p-1 hidden">
-                        <div>
-                            <h2 id="displayShopName" class="text-xl font-bold text-slate-900">DAS MOBILE SERVICE</h2>
-                            <p id="displayShopAddress" class="text-xs text-slate-500 whitespace-pre-line mt-1">Vill+P.O - Main Road, Pin - 700001&#10;Mob: +91 9876543210</p>
+    <!-- Main Printable Invoice Area -->
+    <div class="invoice-box" id="invoiceArea">
+        
+        <!-- Header Section -->
+        <table class="invoice-header-table">
+            <tr>
+                <td>
+                    <div class="brand-logo-area">
+                        <div class="logo-wrapper">
+                            <img src="1000063125.png" id="displayLogo" alt="DMS" class="shop-logo" onerror="this.onerror=null; this.parentElement.innerHTML='<b style=\'color:#fff;font-size:18px;\'>DMS</b>';">
+                        </div>
+                        <div class="shop-details">
+                            <h1 id="displayShopName">DAS MOBILE SERVICE</h1>
+                            <p id="displayAddress">📍 Nepalganj Hat, Harirchak, West Bengal</p>
+                            <p id="displayPhones">📞 Phone: +91 7003194308 / +91 9874862292</p>
                         </div>
                     </div>
-                    <div class="text-right">
-                        <span class="inline-block bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-1 rounded">INVOICE</span>
-                        <p class="text-xs text-slate-500 mt-2">তারিখ: <span id="invDate">--/--/----</span></p>
-                        <p class="text-xs text-slate-500">ইনভয়েস নং: #<span id="invNum">1001</span></p>
-                    </div>
-                </div>
+                </td>
+                <td class="invoice-title-area">
+                    <h2>INVOICE</h2>
+                    <span class="invoice-badge">CASH MEMO / SERVICE BILL</span>
+                </td>
+            </tr>
+        </table>
 
-                <!-- Customer Info Display -->
-                <div class="bg-slate-50 p-3 rounded-lg mb-4 text-xs grid grid-cols-2 gap-2">
-                    <div>
-                        <p class="text-slate-400">গ্রাহক:</p>
-                        <p id="displayCustName" class="font-semibold text-slate-700">--</p>
-                        <p id="displayCustPhone" class="text-slate-600">--</p>
+        <!-- Customer & Invoice Meta Table -->
+        <table class="meta-table">
+            <tr>
+                <td>
+                    <div class="meta-field">
+                        <label>Customer Name</label>
+                        <input type="text" id="custName" class="searchable" placeholder="Enter name...">
                     </div>
-                    <div>
-                        <p class="text-slate-400">ডিভাইস বিবরণ:</p>
-                        <p id="displayCustDevice" class="font-semibold text-slate-700">--</p>
+                </td>
+                <td>
+                    <div class="meta-field">
+                        <label>Invoice Number</label>
+                        <input type="text" id="invoiceNum" class="searchable" value="#DMS-1001">
                     </div>
-                </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="meta-field">
+                        <label>Phone Number</label>
+                        <input type="tel" id="custPhone" class="searchable" placeholder="Enter phone...">
+                    </div>
+                </td>
+                <td>
+                    <div class="meta-field">
+                        <label>Date & Time</label>
+                        <input type="text" id="invoiceDate" readonly>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <div class="meta-field">
+                        <label>Device / Model</label>
+                        <input type="text" id="deviceModel" class="searchable" placeholder="e.g. Realme 11 Pro">
+                    </div>
+                </td>
+                <td>
+                    <div class="meta-field">
+                        <label>Payment Mode</label>
+                        <select id="paymentType">
+                            <option value="Cash">Cash</option>
+                            <option value="UPI / Online Payment">UPI / Mobile Banking</option>
+                            <option value="Card Payment">Card Payment</option>
+                            <option value="Due / Credit">Due / Credit</option>
+                        </select>
+                    </div>
+                </td>
+            </tr>
+        </table>
 
-                <!-- Table of Items -->
-                <table class="w-full text-left text-xs mb-4">
-                    <thead>
-                        <tr class="border-b bg-slate-100 text-slate-600">
-                            <th class="p-2">বিবরণ</th>
-                            <th class="p-2 text-center">পরিমাণ</th>
-                            <th class="p-2 text-right">মূল্য</th>
-                            <th class="p-2 text-right">মোট</th>
-                            <th class="p-2 text-center no-print">অ্যাকশন</th>
+        <!-- Main Particulars Items Table -->
+        <div class="table-responsive">
+            <table class="items-table" id="itemsTable">
+                <thead>
+                    <tr>
+                        <th style="width: 8%;" class="text-center">Sl.</th>
+                        <th style="width: 50%;">Description (Item / Service)</th>
+                        <th style="width: 15%;" class="text-center">Qty</th>
+                        <th style="width: 22%;" class="text-right" id="thAmount">Amount (₹)</th>
+                        <th style="width: 5%;" class="delete-btn"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="text-center">1</td>
+                        <td><input type="text" placeholder="Enter repair or spare part..." class="item-desc searchable"></td>
+                        <td><input type="number" value="1" class="item-qty text-center" oninput="calculateTotal()"></td>
+                        <td><input type="number" placeholder="0.00" class="item-price text-right" oninput="calculateTotal()"></td>
+                        <td class="delete-btn text-center"><button style="color:#e53e3e; cursor:pointer; border:none; background:none; font-weight:bold; font-size:16px;" onclick="deleteRow(this)">✕</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <button class="btn-add-item" onclick="addRow()">+ Add New Line Item</button>
+
+        <!-- Terms & Calculations Table -->
+        <table class="summary-table">
+            <tr>
+                <td class="terms-box">
+                    <h4>Terms & Conditions</h4>
+                    <ol id="displayTerms">
+                        <li>ফিজিক্যাল ড্যামেজ বা ওয়াটার ড্যামেজের ক্ষেত্রে কোনো ওয়ারেন্টি প্রযোজ্য নয়।</li>
+                        <li>ওয়ারেন্টি সেবার জন্য এই মূল ইনভয়েস বিলটি উপস্থাপন করা বাধ্যতামূলক।</li>
+                    </ol>
+                </td>
+                <td class="calc-table-wrapper">
+                    <table class="calc-table">
+                        <tr>
+                            <td>Sub Total:</td>
+                            <td class="text-right" id="subTotal">₹ 0.00</td>
                         </tr>
-                    </thead>
-                    <tbody id="itemsTableBody">
-                        <!-- Items rendered via JavaScript -->
-                    </tbody>
-                </table>
+                        <tr>
+                            <td>Discount (%):</td>
+                            <td class="text-right">
+                                <select id="discountSelect" onchange="calculateTotal()">
+                                    <option value="0">0%</option>
+                                    <option value="1">1%</option>
+                                    <option value="2">2%</option>
+                                    <option value="3">3%</option>
+                                    <option value="4">4%</option>
+                                    <option value="5">5%</option>
+                                    <option value="6">6%</option>
+                                    <option value="7">7%</option>
+                                    <option value="8">8%</option>
+                                    <option value="9">9%</option>
+                                    <option value="10">10%</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td id="taxLabel">GST Rate:</td>
+                            <td class="text-right">
+                                <select id="taxSelect" onchange="calculateTotal()">
+                                    <option value="0">0% (No Tax)</option>
+                                    <option value="5">5%</option>
+                                    <option value="12">12%</option>
+                                    <option value="15">15%</option>
+                                    <option value="18">18%</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td id="taxAmountLabel">GST Amount:</td>
+                            <td class="text-right" id="taxAmount">₹ 0.00</td>
+                        </tr>
+                        <tr class="grand-total-row">
+                            <td>Grand Total:</td>
+                            <td class="text-right" id="grandTotal">₹ 0.00</td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
 
-                <!-- Calculation / Total -->
-                <div class="border-t pt-3 flex justify-end">
-                    <div class="w-1/2 space-y-1.5 text-xs text-right">
-                        <div class="flex justify-between text-slate-600">
-                            <span>মোট পরিমাণ:</span>
-                            <span id="subTotal">0.00</span>
-                        </div>
-                        <div class="flex justify-between font-bold text-sm text-slate-900 border-t pt-1.5">
-                            <span>সর্বমোট (Grand Total):</span>
-                            <span id="grandTotal">0.00</span>
-                        </div>
-                    </div>
-                </div>
+        <!-- Signatures -->
+        <table class="signature-table">
+            <tr>
+                <td>
+                    <div class="sig-line"></div>
+                    <div class="sig-text">Customer Signature</div>
+                </td>
+                <td>
+                    <div class="sig-line"></div>
+                    <div class="sig-text">Authorised Signatory<br><small style="font-weight:normal; color:#718096;" id="sigShopName">DAS MOBILE SERVICE</small></div>
+                </td>
+            </tr>
+        </table>
 
-                <!-- Footer Terms & Signature -->
-                <div class="mt-8 pt-4 border-t border-slate-100 flex justify-between items-end text-[10px] text-slate-400">
-                    <div>
-                        <p class="font-semibold text-slate-500 mb-0.5">শর্তাবলী:</p>
-                        <p>১. সার্ভিস বা পার্টসের ওয়ারেন্টি বিলের নিয়ম অনুযায়ী।</p>
-                        <p>২. পানিতে ভিজা বা পড়ে ভেঙ্গে যাওয়া সেটের ওয়ারেন্টি হয় না।</p>
-                    </div>
-                    <div class="text-center">
-                        <div class="h-8"></div>
-                        <p class="border-t pt-1 font-medium text-slate-600">স্বাক্ষর / সিল</p>
-                    </div>
-                </div>
+    </div>
 
-            </div>
-        </section>
-
-    </main>
-
-    <!-- JavaScript Application Logic -->
     <script>
-        // App State
-        let items = [];
         let currencySymbol = '₹';
-        let region = 'IN';
+        let defaultCountryCode = '91';
+        let uploadedLogoBase64 = '';
 
-        // Element Selectors
-        const regionSelect = document.getElementById('regionSelect');
-        const shopNameInput = document.getElementById('shopName');
-        const shopAddressInput = document.getElementById('shopAddress');
-        const logoInput = document.getElementById('logoInput');
-        const displayLogo = document.getElementById('displayLogo');
-        const displayShopName = document.getElementById('displayShopName');
-        const displayShopAddress = document.getElementById('displayShopAddress');
-
-        const custName = document.getElementById('custName');
-        const custPhone = document.getElementById('custPhone');
-        const custDevice = document.getElementById('custDevice');
-
-        const displayCustName = document.getElementById('displayCustName');
-        const displayCustPhone = document.getElementById('displayCustPhone');
-        const displayCustDevice = document.getElementById('displayCustDevice');
-
-        // Live Clock
-        function updateClock() {
+        function setLiveDateTime() {
             const now = new Date();
-            document.getElementById('liveDateTime').innerText = now.toLocaleString('bn-IN');
-            document.getElementById('invDate').innerText = now.toLocaleDateString('bn-IN');
+            const dateStr = now.toLocaleDateString('en-GB');
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            document.getElementById('invoiceDate').value = `${dateStr}, ${timeStr}`;
         }
-        setInterval(updateClock, 1000);
-        updateClock();
 
-        // 1. DYNAMIC LOGO UPLOAD (Base64 + LocalStorage Fix)
-        logoInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(event) {
-                    const base64Img = event.target.result;
-                    displayLogo.src = base64Img;
-                    displayLogo.classList.remove('hidden');
-                    // Save to localStorage so image persists
-                    localStorage.setItem('dms_app_logo', base64Img);
-                };
-                reader.readAsDataURL(file); // Convert image to Base64 Data URL
+        window.onload = function() {
+            setLiveDateTime();
+            loadSavedConfig();
+        };
+
+        function changeCountryVersion() {
+            const version = document.getElementById('countryVersion').value;
+            if (version === 'BD') {
+                currencySymbol = '৳';
+                defaultCountryCode = '880';
+                document.getElementById('thAmount').innerText = 'Amount (৳)';
+                document.getElementById('taxLabel').innerText = 'VAT Rate:';
+                document.getElementById('taxAmountLabel').innerText = 'VAT Amount:';
+            } else {
+                currencySymbol = '₹';
+                defaultCountryCode = '91';
+                document.getElementById('thAmount').innerText = 'Amount (₹)';
+                document.getElementById('taxLabel').innerText = 'GST Rate:';
+                document.getElementById('taxAmountLabel').innerText = 'GST Amount:';
             }
-        });
+            calculateTotal();
+        }
 
-        // Load Saved Logo on Page Load
-        window.addEventListener('DOMContentLoaded', () => {
-            const savedLogo = localStorage.getItem('dms_app_logo');
-            if (savedLogo) {
-                displayLogo.src = savedLogo;
-                displayLogo.classList.remove('hidden');
-            }
-            // Generate Random Invoice No
-            document.getElementById('invNum').innerText = Math.floor(1000 + Math.random() * 9000);
-        });
+        function calculateTotal() {
+            let subTotal = 0;
+            const rows = document.querySelectorAll('#itemsTable tbody tr');
+            rows.forEach(row => {
+                const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+                const price = parseFloat(row.querySelector('.item-price').value) || 0;
+                subTotal += qty * price;
+            });
 
-        // Dynamic Inputs Binding
-        shopNameInput.addEventListener('input', (e) => displayShopName.innerText = e.target.value || 'DAS MOBILE SERVICE');
-        shopAddressInput.addEventListener('input', (e) => displayShopAddress.innerText = e.target.value);
-        custName.addEventListener('input', (e) => displayCustName.innerText = e.target.value || '--');
-        custPhone.addEventListener('input', (e) => displayCustPhone.innerText = e.target.value || '--');
-        custDevice.addEventListener('input', (e) => displayCustDevice.innerText = e.target.value || '--');
+            const discountPercent = parseFloat(document.getElementById('discountSelect').value) || 0;
+            const discountAmount = (subTotal * discountPercent) / 100;
+            const subTotalAfterDiscount = subTotal - discountAmount;
 
-        // Region Switching
-        regionSelect.addEventListener('change', (e) => {
-            region = e.target.value;
-            currencySymbol = region === 'IN' ? '₹' : '৳';
-            renderItems();
-        });
+            const taxPercent = parseFloat(document.getElementById('taxSelect').value) || 0;
+            const taxAmount = (subTotalAfterDiscount * taxPercent) / 100;
 
-        // Add Item Logic
-        document.getElementById('addItemBtn').addEventListener('click', () => {
-            const desc = document.getElementById('itemDesc').value.trim();
-            const qty = parseInt(document.getElementById('itemQty').value) || 1;
-            const price = parseFloat(document.getElementById('itemPrice').value) || 0;
+            const grandTotal = subTotalAfterDiscount + taxAmount;
 
-            if (!desc || price <= 0) {
-                alert('দয়া করে বিবরণ এবং সঠিক মূল্য লিখুন!');
+            document.getElementById('subTotal').innerText = currencySymbol + ' ' + subTotal.toFixed(2);
+            document.getElementById('taxAmount').innerText = currencySymbol + ' ' + taxAmount.toFixed(2);
+            document.getElementById('grandTotal').innerText = currencySymbol + ' ' + grandTotal.toFixed(2);
+        }
+
+        function addRow() {
+            const table = document.getElementById('itemsTable').getElementsByTagName('tbody')[0];
+            const rowCount = table.rows.length + 1;
+            const newRow = table.insertRow();
+            newRow.innerHTML = `
+                <td class="text-center">${rowCount}</td>
+                <td><input type="text" placeholder="Enter repair or spare part..." class="item-desc searchable"></td>
+                <td><input type="number" value="1" class="item-qty text-center" oninput="calculateTotal()"></td>
+                <td><input type="number" placeholder="0.00" class="item-price text-right" oninput="calculateTotal()"></td>
+                <td class="delete-btn text-center"><button style="color:#e53e3e; cursor:pointer; border:none; background:none; font-weight:bold; font-size:16px;" onclick="deleteRow(this)">✕</button></td>
+            `;
+            calculateTotal();
+        }
+
+        function deleteRow(btn) {
+            const row = btn.parentNode.parentNode;
+            row.parentNode.removeChild(row);
+            calculateTotal();
+        }
+
+        function resetForm() {
+            document.getElementById('custName').value = '';
+            document.getElementById('custPhone').value = '';
+            document.getElementById('deviceModel').value = '';
+            document.getElementById('discountSelect').value = '0';
+            document.getElementById('taxSelect').value = '0';
+            document.getElementById('paymentType').selectedIndex = 0;
+            document.getElementById('searchInput').value = '';
+            document.getElementById('invoiceArea').style.display = 'block';
+
+            setLiveDateTime();
+
+            const tbody = document.getElementById('itemsTable').getElementsByTagName('tbody')[0];
+            tbody.innerHTML = `
+                <tr>
+                    <td class="text-center">1</td>
+                    <td><input type="text" placeholder="Enter repair or spare part..." class="item-desc searchable"></td>
+                    <td><input type="number" value="1" class="item-qty text-center" oninput="calculateTotal()"></td>
+                    <td><input type="number" placeholder="0.00" class="item-price text-right" oninput="calculateTotal()"></td>
+                    <td class="delete-btn text-center"><button style="color:#e53e3e; cursor:pointer; border:none; background:none; font-weight:bold; font-size:16px;" onclick="deleteRow(this)">✕</button></td>
+                </tr>
+            `;
+            calculateTotal();
+        }
+
+        function filterInvoice() {
+            const filter = document.getElementById('searchInput').value.toLowerCase();
+            const searchableFields = document.querySelectorAll('.searchable');
+            let matchFound = false;
+
+            if (filter.trim() === '') {
+                document.getElementById('invoiceArea').style.display = 'block';
                 return;
             }
 
-            items.push({ id: Date.now(), desc, qty, price });
-            document.getElementById('itemDesc').value = '';
-            document.getElementById('itemPrice').value = '';
-            renderItems();
-        });
-
-        // Remove Item
-        function removeItem(id) {
-            items = items.filter(item => item.id !== id);
-            renderItems();
-        }
-
-        // Render Table & Calculate Total
-        function renderItems() {
-            const tbody = document.getElementById('itemsTableBody');
-            tbody.innerHTML = '';
-            let total = 0;
-
-            items.forEach((item, index) => {
-                const itemTotal = item.qty * item.price;
-                total += itemTotal;
-                tbody.innerHTML += `
-                    <tr class="border-b">
-                        <td class="p-2 font-medium">${item.desc}</td>
-                        <td class="p-2 text-center">${item.qty}</td>
-                        <td class="p-2 text-right">${currencySymbol}${item.price.toFixed(2)}</td>
-                        <td class="p-2 text-right font-semibold">${currencySymbol}${itemTotal.toFixed(2)}</td>
-                        <td class="p-2 text-center no-print">
-                            <button onclick="removeItem(${item.id})" class="text-red-500 hover:text-red-700">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
+            searchableFields.forEach(field => {
+                if (field.value.toLowerCase().includes(filter)) {
+                    matchFound = true;
+                }
             });
 
-            document.getElementById('subTotal').innerText = `${currencySymbol}${total.toFixed(2)}`;
-            document.getElementById('grandTotal').innerText = `${currencySymbol}${total.toFixed(2)}`;
+            document.getElementById('invoiceArea').style.display = matchFound ? 'block' : 'none';
         }
 
-        // 2. PERFECT PDF GENERATION (WITH LOGO & FULL SUPPORT)
-        document.getElementById('downloadPdfBtn').addEventListener('click', () => {
-            const element = document.getElementById('invoicePreview');
-            
-            // html2pdf options with CORS and Canvas support enabled
+        function toggleConfig() {
+            const panel = document.getElementById('configPanel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        /* 1. Base64 Upload Fix for any User */
+        function handleLogoUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedLogoBase64 = e.target.result;
+                    
+                    // Display image
+                    const logoWrapper = document.querySelector('.logo-wrapper');
+                    logoWrapper.innerHTML = `<img src="${uploadedLogoBase64}" id="displayLogo" alt="Shop Logo" class="shop-logo">`;
+                    
+                    // Save to User's Browser
+                    localStorage.setItem('dms_app_custom_logo', uploadedLogoBase64);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveConfig() {
+            const shopName = document.getElementById('cfgShopName').value;
+            const address = document.getElementById('cfgAddress').value;
+            const phones = document.getElementById('cfgPhones').value;
+            const themeColor = document.getElementById('cfgThemeColor').value;
+            const prefix = document.getElementById('cfgPrefix').value;
+            const termsRaw = document.getElementById('cfgTerms').value;
+
+            document.documentElement.style.setProperty('--primary-color', themeColor);
+
+            document.getElementById('appTitle').innerText = shopName;
+            document.getElementById('displayShopName').innerText = shopName;
+            document.getElementById('sigShopName').innerText = shopName;
+            document.getElementById('displayAddress').innerText = address;
+            document.getElementById('displayPhones').innerText = phones;
+            document.getElementById('invoiceNum').value = prefix + "1001";
+
+            const termsArray = termsRaw.split(',');
+            const termsOl = document.getElementById('displayTerms');
+            termsOl.innerHTML = '';
+            termsArray.forEach(term => {
+                if(term.trim()) {
+                    const li = document.createElement('li');
+                    li.innerText = term.trim();
+                    termsOl.appendChild(li);
+                }
+            });
+
+            const appConfig = {
+                shopName, address, phones, themeColor, prefix, termsRaw
+            };
+            localStorage.setItem('dms_app_config', JSON.stringify(appConfig));
+
+            toggleConfig();
+            alert('সমস্ত পরিবর্তন সফলভাবে সেভ হয়েছে!');
+        }
+
+        function loadSavedConfig() {
+            // Load saved logo
+            const savedLogo = localStorage.getItem('dms_app_custom_logo');
+            if (savedLogo) {
+                uploadedLogoBase64 = savedLogo;
+                const logoWrapper = document.querySelector('.logo-wrapper');
+                logoWrapper.innerHTML = `<img src="${savedLogo}" id="displayLogo" alt="Shop Logo" class="shop-logo">`;
+            }
+
+            const saved = localStorage.getItem('dms_app_config');
+            if (saved) {
+                const cfg = JSON.parse(saved);
+                document.getElementById('cfgShopName').value = cfg.shopName || 'DAS MOBILE SERVICE';
+                document.getElementById('cfgAddress').value = cfg.address || '';
+                document.getElementById('cfgPhones').value = cfg.phones || '';
+                document.getElementById('cfgThemeColor').value = cfg.themeColor || '#0056b3';
+                document.getElementById('cfgPrefix').value = cfg.prefix || '#DMS-';
+                document.getElementById('cfgTerms').value = cfg.termsRaw || '';
+
+                document.documentElement.style.setProperty('--primary-color', cfg.themeColor || '#0056b3');
+                document.getElementById('appTitle').innerText = cfg.shopName;
+                document.getElementById('displayShopName').innerText = cfg.shopName;
+                document.getElementById('sigShopName').innerText = cfg.shopName;
+                document.getElementById('displayAddress').innerText = cfg.address;
+                document.getElementById('displayPhones').innerText = cfg.phones;
+                document.getElementById('invoiceNum').value = (cfg.prefix || '#DMS-') + "1001";
+
+                if (cfg.termsRaw) {
+                    const termsArray = cfg.termsRaw.split(',');
+                    const termsOl = document.getElementById('displayTerms');
+                    termsOl.innerHTML = '';
+                    termsArray.forEach(term => {
+                        if(term.trim()) {
+                            const li = document.createElement('li');
+                            li.innerText = term.trim();
+                            termsOl.appendChild(li);
+                        }
+                    });
+                }
+            }
+        }
+
+        /* 2. PDF Export Fix for CORS and Custom Base64 Images */
+        function downloadPDF() {
+            const element = document.getElementById('invoiceArea');
+            const invoiceNum = document.getElementById('invoiceNum').value || 'Invoice';
+            const custName = document.getElementById('custName').value || 'Customer';
+
             const opt = {
-                margin:       [0.3, 0.3, 0.3, 0.3],
-                filename:     `Invoice_${custName.value || 'Customer'}.pdf`,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { 
+                margin: 5,
+                filename: `${invoiceNum}_${custName}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
                     scale: 2, 
                     useCORS: true, 
-                    allowTaint: true,
+                    allowTaint: true, 
                     logging: false 
                 },
-                jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
 
             html2pdf().set(opt).from(element).save();
-        });
+        }
 
-        // 3. WHATSAPP DIRECT SHARE
-        document.getElementById('whatsappShareBtn').addEventListener('click', () => {
-            const phone = custPhone.value.trim();
+        function sendWhatsApp() {
+            let phone = document.getElementById('custPhone').value.trim();
+            const name = document.getElementById('custName').value.trim() || 'Customer';
+            const invoiceNo = document.getElementById('invoiceNum').value;
+            const total = document.getElementById('grandTotal').innerText;
+            const device = document.getElementById('deviceModel').value || 'N/A';
+            const shopName = document.getElementById('displayShopName').innerText;
+
             if (!phone) {
-                alert('দয়া করে গ্রাহকের মোবাইল নম্বর লিখুন!');
+                alert('দয়া করে কাস্টমারের ফোন নম্বর লিখুন!');
                 return;
             }
 
-            let msg = `*${displayShopName.innerText}*\n`;
-            msg += `ইনভয়েস নো: #${document.getElementById('invNum').innerText}\n`;
-            msg += `গ্রাহক: ${custName.value}\n`;
-            msg += `ডিভাইস: ${custDevice.value}\n\n`;
-            msg += `*আইটেম বিবরণ:*\n`;
-            
-            items.forEach(i => {
-                msg += `- ${i.desc} (${i.qty}x) = ${currencySymbol}${i.qty * i.price}\n`;
-            });
-            
-            msg += `\n*মোট বিল: ${document.getElementById('grandTotal').innerText}*\n`;
-            msg += `ধন্যবাদ আবার আসবেন!`;
+            phone = phone.replace(/\D/g, '');
+            if (phone.length === 10 && defaultCountryCode === '91') phone = '91' + phone;
+            if (phone.length === 11 && defaultCountryCode === '880' && phone.startsWith('0')) phone = '880' + phone.substring(1);
 
-            const encodedMsg = encodeURIComponent(msg);
-            window.open(`https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodedMsg}`, '_blank');
-        });
+            downloadPDF();
+
+            const message = `হ্যালো ${name},\n\n` +
+                `*${shopName}*-এ আসার জন্য আপনাকে ধন্যবাদ।\n\n` +
+                `📋 *Invoice No:* ${invoiceNo}\n` +
+                `📱 *Device:* ${device}\n` +
+                `💰 *Total Amount:* ${total}\n\n` +
+                `আপনার ইনভয়েস PDF-টি ডাউনলোড হয়েছে। এটি সেভ করে রাখুন।`;
+
+            const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
     </script>
 </body>
 </html>
